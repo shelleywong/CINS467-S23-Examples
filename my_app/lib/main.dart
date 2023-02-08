@@ -51,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   void _incrementCounter() {
-   setState(() {
+    setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
@@ -61,10 +61,16 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _decrementCounter() {
+    setState(() {
+      _counter--;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    _counter = 1000;
+    _counter = 0;
   }
 
   @override
@@ -104,9 +110,33 @@ class _MyHomePageState extends State<MyHomePage> {
             const Text(
               'You have clicked the button this many times:',
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Tooltip(
+                    message: 'increments counter',
+                    child: ElevatedButton(
+                      onPressed: _incrementCounter,
+                      child: const Icon(Icons.thumb_up),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(12.0,0.0,12.0,0.0),
+                    child: Text(
+                      '$_counter',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.thumb_down),
+                    tooltip: 'decrements counter',
+                    color: Theme.of(context).primaryColor,
+                    onPressed: _decrementCounter,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
