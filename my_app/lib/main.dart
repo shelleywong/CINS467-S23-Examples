@@ -51,13 +51,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   late Future<int> _counter;
+  late Future<String> _username;
   //int _counter = 0;
 
   Future<void> _incrementCounter() async {
     final SharedPreferences prefs = await _prefs;
     final int counter = (prefs.getInt('counter') ?? 0) + 1;
     setState(() {
-      _counter = prefs.setInt('counter', counter).then((bool success){
+      _counter = prefs.setInt('counter', counter).then((bool success) {
         return counter;
       });
     });
@@ -67,8 +68,19 @@ class _MyHomePageState extends State<MyHomePage> {
     final SharedPreferences prefs = await _prefs;
     final int counter = (prefs.getInt('counter') ?? 0) - 1;
     setState(() {
-      _counter = prefs.setInt('counter', counter).then((bool success){
+      _counter = prefs.setInt('counter', counter).then((bool success) {
         return counter;
+      });
+    });
+  }
+
+  Future<void> _setUsername() async {
+    final SharedPreferences prefs = await _prefs;
+    final String username =
+        (prefs.getString('username') == 'Shelley' ? 'swong' : 'Shelley');
+    setState(() {
+      _username = prefs.setString('username', username).then((bool success) {
+        return username;
       });
     });
   }
@@ -76,8 +88,11 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _counter = _prefs.then((SharedPreferences prefs){
+    _counter = _prefs.then((SharedPreferences prefs) {
       return prefs.getInt('counter') ?? 0;
+    });
+    _username = _prefs.then((SharedPreferences prefs) {
+      return prefs.getString('username') ?? 'CINS467 Student';
     });
   }
 
@@ -99,22 +114,26 @@ class _MyHomePageState extends State<MyHomePage> {
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            FutureBuilder(
+              future: _username,
+              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return const CircularProgressIndicator();
+                  default:
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      return Text(
+                        'Username: ${snapshot.data}',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      );
+                    }
+                }
+              },
+            ),
             const Text(
               'You have clicked the button this many times:',
             ),
@@ -132,19 +151,22 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   FutureBuilder(
                     future: _counter,
-                    builder: (BuildContext context, AsyncSnapshot<int> snapshot){
-                      switch(snapshot.connectionState){
+                    builder:
+                        (BuildContext context, AsyncSnapshot<int> snapshot) {
+                      switch (snapshot.connectionState) {
                         case ConnectionState.waiting:
                           return const CircularProgressIndicator();
                         default:
-                          if(snapshot.hasError){
+                          if (snapshot.hasError) {
                             return Text('Error: ${snapshot.error}');
                           } else {
                             return Container(
-                              padding: const EdgeInsets.fromLTRB(12.0,0.0,12.0,0.0),
+                              padding: const EdgeInsets.fromLTRB(
+                                  12.0, 0.0, 12.0, 0.0),
                               child: Text(
                                 'Counter: ${snapshot.data}',
-                                style: Theme.of(context).textTheme.headlineMedium,
+                                style:
+                                    Theme.of(context).textTheme.headlineMedium,
                               ),
                             );
                           }
@@ -164,9 +186,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        onPressed: _setUsername,
+        tooltip: 'Toggle username',
+        child: const Icon(Icons.person),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
