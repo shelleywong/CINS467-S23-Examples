@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:my_app/storage.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -49,9 +51,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final UserStorage _storage = UserStorage();
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   late Future<int> _counter;
-  late Future<String> _username;
+  //late Future<String> _username;
+  String _username = 'none';
   //int _counter = 0;
 
   Future<void> _incrementCounter() async {
@@ -75,12 +79,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _setUsername() async {
-    final SharedPreferences prefs = await _prefs;
-    final String username =
-        (prefs.getString('username') == 'Shelley' ? 'swong' : 'Shelley');
-    setState(() {
-      _username = prefs.setString('username', username).then((bool success) {
-        return username;
+    _storage.readUserInfo().then((value) async {
+      final String username = (value == 'Shelley' ? 'swong' : 'Shelley');
+      await _storage.writeUserInfo(username);
+      setState((){
+        _username = username;
       });
     });
   }
@@ -91,8 +94,8 @@ class _MyHomePageState extends State<MyHomePage> {
     _counter = _prefs.then((SharedPreferences prefs) {
       return prefs.getInt('counter') ?? 0;
     });
-    _username = _prefs.then((SharedPreferences prefs) {
-      return prefs.getString('username') ?? 'CINS467 Student';
+    _storage.readUserInfo().then((value) {
+      _username = value;
     });
   }
 
@@ -116,23 +119,10 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            FutureBuilder(
-              future: _username,
-              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return const CircularProgressIndicator();
-                  default:
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      return Text(
-                        'Username: ${snapshot.data}',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      );
-                    }
-                }
-              },
+            Text(
+              _username == 'none' ? 'Hello!' : 'Hello $_username!',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
             const Text(
               'You have clicked the button this many times:',
