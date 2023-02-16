@@ -32,7 +32,7 @@ class UserStorage {
     }
   }
 
-  Future<String> readUserInfo() async {
+  Future<String> readUsername() async {
     try {
       final file = await _localFile;
       // Read the file

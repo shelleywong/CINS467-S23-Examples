@@ -80,14 +80,14 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> _setUserInfo() async {
-    _storage.readUserInfo().then((value) async {
+  Future<void> _setUsername() async {
+    _storage.readUsername().then((value) async {
       final String username = (value == 'Shelley' ? 'swong' : 'Shelley');
       _storage.readUserMetric().then((metric) async {
         _storage.readUserAge().then((age) async {
           await _storage.writeUserInfo(username, metric, age);
           setState(() {
-            _username = _storage.readUserInfo();
+            _username = _storage.readUsername();
           });
         });
       });
@@ -97,7 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _setUserMetric() async {
     _storage.readUserMetric().then((value) async {
       final bool metric = (value ? false : true);
-      _storage.readUserInfo().then((name){
+      _storage.readUsername().then((name){
         _storage.readUserAge().then((age){
           _storage.writeUserInfo(name, metric, age);
           setState(() {
@@ -111,7 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _setUserAge() async {
     _storage.readUserAge().then((value) async {
       final int age = (value == 42 ? 41 : 42);
-      _storage.readUserInfo().then((name){
+      _storage.readUsername().then((name){
         _storage.readUserMetric().then((metric){
           _storage.writeUserInfo(name, metric, age);
           setState(() {
@@ -128,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _counter = _prefs.then((SharedPreferences prefs) {
       return prefs.getInt('counter') ?? 0;
     });
-    _username = _storage.readUserInfo();
+    _username = _storage.readUsername();
     _metric = _storage.readUserMetric();
     _age = _storage.readUserAge();
   }
@@ -282,7 +282,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _setUserInfo,
+        onPressed: _setUsername,
         tooltip: 'Toggle user information',
         child: const Icon(Icons.person),
       ), // This trailing comma makes auto-formatting nicer for build methods.
