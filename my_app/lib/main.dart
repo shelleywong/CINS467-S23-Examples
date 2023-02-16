@@ -54,8 +54,10 @@ class _MyHomePageState extends State<MyHomePage> {
   final UserStorage _storage = UserStorage();
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   late Future<int> _counter;
-  //late Future<String> _username;
-  String _username = 'none';
+  late Future<String> _username;
+  late Future<bool> _metric;
+  late Future<int> _age;
+  //String _username = 'none';
   //int _counter = 0;
 
   Future<void> _incrementCounter() async {
@@ -78,12 +80,44 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> _setUsername() async {
+  Future<void> _setUserInfo() async {
     _storage.readUserInfo().then((value) async {
       final String username = (value == 'Shelley' ? 'swong' : 'Shelley');
-      await _storage.writeUserInfo(username);
-      setState((){
-        _username = username;
+      _storage.readUserMetric().then((metric) async {
+        _storage.readUserAge().then((age) async {
+          await _storage.writeUserInfo(username, metric, age);
+          setState(() {
+            _username = _storage.readUserInfo();
+          });
+        });
+      });
+    });
+  }
+
+  Future<void> _setUserMetric() async {
+    _storage.readUserMetric().then((value) async {
+      final bool metric = (value ? false : true);
+      _storage.readUserInfo().then((name){
+        _storage.readUserAge().then((age){
+          _storage.writeUserInfo(name, metric, age);
+          setState(() {
+            _metric = _storage.readUserMetric();
+          });
+        });
+      });
+    });
+  }
+
+  Future<void> _setUserAge() async {
+    _storage.readUserAge().then((value) async {
+      final int age = (value == 42 ? 41 : 42);
+      _storage.readUserInfo().then((name){
+        _storage.readUserMetric().then((metric){
+          _storage.writeUserInfo(name, metric, age);
+          setState(() {
+            _age = _storage.readUserAge();
+          });
+        });
       });
     });
   }
@@ -94,9 +128,9 @@ class _MyHomePageState extends State<MyHomePage> {
     _counter = _prefs.then((SharedPreferences prefs) {
       return prefs.getInt('counter') ?? 0;
     });
-    _storage.readUserInfo().then((value) {
-      _username = value;
-    });
+    _username = _storage.readUserInfo();
+    _metric = _storage.readUserMetric();
+    _age = _storage.readUserAge();
   }
 
   @override
@@ -119,10 +153,82 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              _username == 'none' ? 'Hello!' : 'Hello $_username!',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium,
+            FutureBuilder(
+              future: _username,
+              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return const CircularProgressIndicator();
+                  default:
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      return Container(
+                        padding:
+                            const EdgeInsets.fromLTRB(12.0, 0.0, 12.0, 0.0),
+                        child: Text(
+                          'Hello ${snapshot.data}!',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      );
+                    }
+                }
+              },
+            ),
+            FutureBuilder(
+              future: _metric,
+              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return const CircularProgressIndicator();
+                  default:
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      return Container(
+                        padding:
+                            const EdgeInsets.all(8.0),
+                        child: Text(
+                          'Use metric? ${snapshot.data}!',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      );
+                    }
+                }
+              },
+            ),
+            ElevatedButton(
+              onPressed: _setUserMetric, 
+              child: const Text('Metric/Imperial'),
+            ),
+            FutureBuilder(
+              future: _age,
+              builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return const CircularProgressIndicator();
+                  default:
+                    if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      return Container(
+                        padding:
+                            const EdgeInsets.all(8.0),
+                        child: Text(
+                          'Age: ${snapshot.data}!',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                      );
+                    }
+                }
+              },
+            ),
+            ElevatedButton(
+              onPressed: _setUserAge, 
+              child: const Text('Toggle Age'),
             ),
             const Text(
               'You have clicked the button this many times:',
@@ -176,8 +282,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _setUsername,
-        tooltip: 'Toggle username',
+        onPressed: _setUserInfo,
+        tooltip: 'Toggle user information',
         child: const Icon(Icons.person),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
