@@ -49,25 +49,51 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _myController = TextEditingController();
-  String _inputText = '';
+  String? _inputText = '';
 
-  void _printLatestValue() {
-    if (kDebugMode) {
-      print('Text field input: ${_myController.text}');
+  void _submitForm() {
+    if(_formKey.currentState!.validate()){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Data processing...'),
+          action: SnackBarAction(
+            label: 'OK',
+            onPressed: () {
+              _formKey.currentState!.save();
+              _myController.clear();
+            },
+          ),
+        ),
+      );
+      if (kDebugMode) {
+        print('Text field input: ${_myController.text}');
+      }
     }
+
   }
 
-  void _submitText(){
+  void _saveText(String? value){
     setState(() {
-      _inputText = _myController.text;
+      _inputText = value;
     });
+  }
+
+  String? _textValidator(String? value) {
+    if(value == null || value.isEmpty){
+      return 'Please enter something for your name';
+    } else if(value.contains(';')){
+      return 'Do not use the ";" char.';
+    } else if(value.length < 2){
+      return 'Must be at least 2 characters';
+    }
+    return null;
   }
 
   @override
   void initState() {
     super.initState();
-    _myController.addListener(_printLatestValue);
   }
 
   @override
@@ -83,30 +109,34 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            TextField(
-              controller: _myController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Enter a search term',
-                hintText: 'Search...',
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              TextFormField(
+                controller: _myController,
+                decoration: const InputDecoration(
+                  icon: Icon(Icons.person),
+                  hintText: 'What do people call you?',
+                  labelText: 'Name *',
+                ),
+                onSaved: _saveText,
+                validator: _textValidator,
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                _inputText,
+              ElevatedButton(
+                onPressed: _submitForm,
+                child: const Text('Submit'),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  _inputText ?? '',
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _submitText,
-        tooltip: 'Submit text field input',
-        child: const Icon(Icons.edit),
       ),
     );
   }
