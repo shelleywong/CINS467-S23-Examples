@@ -135,7 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    _storage.close();
+    //_storage.close();
     super.dispose();
   }
 
