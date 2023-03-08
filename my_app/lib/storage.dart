@@ -1,26 +1,13 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 
-import 'package:firebase_core/firebase_core.dart';
+//import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'firebase_options.dart';
+//import 'firebase_options.dart';
 
 class UserStorage {
-  bool _initialized = false;
-
-  Future<void> initializeDefault() async {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    _initialized = true;
-  }
-
-  bool get isInitialized => _initialized;
 
   Future<void> writeUserInfo(String name, bool metric, int age) async {
-    if(!isInitialized){
-      await initializeDefault();
-    }
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     firestore.collection('users').doc('cins467').set({
       'name': name,
@@ -38,9 +25,6 @@ class UserStorage {
   }
 
   Future<String> readUsername() async {
-    if(!isInitialized){
-      await initializeDefault();
-    }
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     DocumentSnapshot ds = await firestore.collection('users')
       .doc('cins467')
@@ -55,9 +39,6 @@ class UserStorage {
   }
 
   Future<bool> readUserMetric() async {
-    if(!isInitialized){
-      await initializeDefault();
-    }
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     DocumentSnapshot ds = await firestore.collection('users')
       .doc('cins467')
@@ -72,9 +53,6 @@ class UserStorage {
   }
 
   Future<int> readUserAge() async {
-    if(!isInitialized){
-      await initializeDefault();
-    }
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     DocumentSnapshot ds = await firestore.collection('users')
       .doc('cins467')
