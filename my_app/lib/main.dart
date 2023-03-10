@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'firebase_options.dart';
 import 'package:my_app/storage.dart';
@@ -15,11 +17,19 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  if(kIsWeb){
+    runApp(const MyApp(myAppTitle: 'Web CINS467'));
+  } else if(Platform.isAndroid){
+    runApp(const MyApp(myAppTitle: 'Android CINS467'));
+  } else{
+    runApp(const MyApp(myAppTitle: 'CINS467'));
+  }
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.myAppTitle});
+
+  final String myAppTitle;
 
   // This widget is the root of your application.
   @override
@@ -38,7 +48,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.deepPurple,
       ),
-      home: const MyHomePage(title: 'CINS 467 Flutter Demo Home Page'),
+      home: MyHomePage(title: '$myAppTitle Home Page'),
     );
   }
 }
@@ -71,6 +81,24 @@ class _MyHomePageState extends State<MyHomePage> {
     distanceFilter: 100,
   );
   late StreamSubscription<Position> positionStream;
+
+  File? _image;
+
+  Future<void> _getImages() async {
+    final ImagePicker picker = ImagePicker();
+    // Capture a photo
+    final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+    setState(() {
+      if(photo != null){
+        _image = File(photo.path); 
+      } else {
+        if (kDebugMode) {
+          print('No photo captured');
+        }
+      }
+      
+    });
+  }
 
   Future<void> _incrementCounter() async {
     final SharedPreferences prefs = await _prefs;
@@ -209,6 +237,16 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            _image == null
+              ? const Icon(Icons.landscape, size: 100)
+              : Image.file(_image!, height: 200),
+            Tooltip(
+              message: 'Launch the camera',
+              child: ElevatedButton(
+                onPressed: _getImages,
+                child: const Icon(Icons.photo_camera),
+              ),
+            ),
             FutureBuilder(
               future: _position,
               builder: (context, snapshot){
