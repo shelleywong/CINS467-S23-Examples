@@ -237,57 +237,69 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _image == null
-              ? const Icon(Icons.landscape, size: 100)
-              : Image.file(_image!, height: 200),
-            Tooltip(
-              message: 'Launch the camera',
-              child: ElevatedButton(
-                onPressed: _getImages,
-                child: const Icon(Icons.photo_camera),
+            Expanded(
+              flex: 2,
+              child: _image == null
+                ? const Icon(Icons.landscape, size: 100)
+                : Image.file(_image!, height: 200),
+            ),
+            Expanded(
+              flex: 1,
+              child: Tooltip(
+                message: 'Launch the camera',
+                child: ElevatedButton(
+                  onPressed: _getImages,
+                  child: const Icon(Icons.photo_camera),
+                ),
               ),
             ),
-            FutureBuilder(
-              future: _position,
-              builder: (context, snapshot){
-                switch(snapshot.connectionState){
-                  case(ConnectionState.waiting):
-                    return const CircularProgressIndicator();
-                  default:
-                    if(snapshot.hasError){
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      return Text(
-                        '${snapshot.data!.latitude}, ${snapshot.data!.longitude} -- ${snapshot.data!.accuracy}',
-                      );
-                    }
-                }
-              },
+            Expanded(
+              flex: 1,
+              child: FutureBuilder(
+                future: _position,
+                builder: (context, snapshot){
+                  switch(snapshot.connectionState){
+                    case(ConnectionState.waiting):
+                      return const CircularProgressIndicator();
+                    default:
+                      if(snapshot.hasError){
+                        return Text('Error: ${snapshot.error}');
+                      } else {
+                        return Text(
+                          '${snapshot.data!.latitude}, ${snapshot.data!.longitude} -- ${snapshot.data!.accuracy}',
+                        );
+                      }
+                  }
+                },
+              ),
             ),
-            StreamBuilder(
-              stream:
-                  FirebaseFirestore.instance.collection('users').snapshots(),
-              builder: (context, snapshot) {
-                switch (snapshot.connectionState) {
-                  case (ConnectionState.waiting):
-                    return const CircularProgressIndicator();
-                  default:
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else if (!snapshot.hasData) {
-                      return Container();
-                    } else {
-                      return Column(
-                        children: [
-                          Text('${snapshot.data!.size}'),
-                          Text('${snapshot.data!.docs[1]["name"]}'),
-                          Text('${snapshot.data!.docs[1]["metric"]}'),
-                          Text('${snapshot.data!.docs[1]["age"]}'),
-                        ],
-                      );
-                    }
-                }
-              },
+            Expanded(
+              flex: 2,
+              child: StreamBuilder(
+                stream:
+                    FirebaseFirestore.instance.collection('users').snapshots(),
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case (ConnectionState.waiting):
+                      return const CircularProgressIndicator();
+                    default:
+                      if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else if (!snapshot.hasData) {
+                        return Container();
+                      } else {
+                        return Column(
+                          children: [
+                            Text('${snapshot.data!.size}'),
+                            Text('${snapshot.data!.docs[1]["name"]}'),
+                            Text('${snapshot.data!.docs[1]["metric"]}'),
+                            Text('${snapshot.data!.docs[1]["age"]}'),
+                          ],
+                        );
+                      }
+                  }
+                },
+              ),
             ),
             // FutureBuilder(
             //   future: _username,
@@ -335,9 +347,12 @@ class _MyHomePageState extends State<MyHomePage> {
             //     }
             //   },
             // ),
-            ElevatedButton(
-              onPressed: _setUserMetric,
-              child: const Text('Metric/Imperial'),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                onPressed: _setUserMetric,
+                child: const Text('Metric/Imperial'),
+              ),
             ),
             // FutureBuilder(
             //   future: _age,
@@ -362,56 +377,59 @@ class _MyHomePageState extends State<MyHomePage> {
             //     }
             //   },
             // ),
-            ElevatedButton(
-              onPressed: _setUserAge,
-              child: const Text('Toggle Age'),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton(
+                onPressed: _setUserAge,
+                child: const Text('Toggle Age'),
+              ),
             ),
-            const Text(
-              'You have clicked the button this many times:',
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Tooltip(
-                    message: 'increments counter',
-                    child: ElevatedButton(
-                      onPressed: _incrementCounter,
-                      child: const Icon(Icons.thumb_up),
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Tooltip(
+                      message: 'increments counter',
+                      child: ElevatedButton(
+                        onPressed: _incrementCounter,
+                        child: const Icon(Icons.thumb_up),
+                      ),
                     ),
-                  ),
-                  FutureBuilder(
-                    future: _counter,
-                    builder:
-                        (BuildContext context, AsyncSnapshot<int> snapshot) {
-                      switch (snapshot.connectionState) {
-                        case ConnectionState.waiting:
-                          return const CircularProgressIndicator();
-                        default:
-                          if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          } else {
-                            return Container(
-                              padding: const EdgeInsets.fromLTRB(
-                                  12.0, 0.0, 12.0, 0.0),
-                              child: Text(
-                                'Counter: ${snapshot.data}',
-                                style:
-                                    Theme.of(context).textTheme.headlineMedium,
-                              ),
-                            );
-                          }
-                      }
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.thumb_down),
-                    tooltip: 'decrements counter',
-                    color: Theme.of(context).primaryColor,
-                    onPressed: _decrementCounter,
-                  ),
-                ],
+                    FutureBuilder(
+                      future: _counter,
+                      builder:
+                          (BuildContext context, AsyncSnapshot<int> snapshot) {
+                        switch (snapshot.connectionState) {
+                          case ConnectionState.waiting:
+                            return const CircularProgressIndicator();
+                          default:
+                            if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}');
+                            } else {
+                              return Container(
+                                padding: const EdgeInsets.fromLTRB(
+                                    12.0, 0.0, 12.0, 0.0),
+                                child: Text(
+                                  'Counter: ${snapshot.data}',
+                                  style:
+                                      Theme.of(context).textTheme.headlineMedium,
+                                ),
+                              );
+                            }
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.thumb_down),
+                      tooltip: 'decrements counter',
+                      color: Theme.of(context).primaryColor,
+                      onPressed: _decrementCounter,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
