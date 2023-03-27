@@ -63,6 +63,15 @@ class MyApp extends StatelessWidget {
                 Navigator.pushReplacementNamed(context, '/');
               }),
             ],
+            headerBuilder: (context, constraints, shrinkOffset) {
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Image.asset('assets/dash1.png'),
+                ),
+              );
+            },
             footerBuilder: (context, action) {
               return Column(
                 children: [
