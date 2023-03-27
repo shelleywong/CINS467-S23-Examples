@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 
 //import 'firebase_options.dart';
 import 'package:my_app/storage.dart';
@@ -206,6 +207,13 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Expanded(
+              flex: 2,
+              child: Text(
+                FirebaseAuth.instance.currentUser!.email.toString(),
+                style: const TextStyle(fontSize: 20),
+                ),
+            ),
             Expanded(
               flex: 2,
               child: _image == null

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 
 import 'home.dart';
 import 'firebase_options.dart';
@@ -15,6 +16,11 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  FirebaseUIAuth.configureProviders([
+    GoogleProvider(clientId: googleClientID),
+  ]);
+
   if (kIsWeb) {
     runApp(const MyApp(myAppTitle: 'Web CINS467'));
   } else if (Platform.isAndroid) {
@@ -57,6 +63,28 @@ class MyApp extends StatelessWidget {
                 Navigator.pushReplacementNamed(context, '/');
               }),
             ],
+            footerBuilder: (context, action) {
+              return Column(
+                children: [
+                  AuthStateListener<OAuthController>(
+                    child: OAuthProviderButton(
+                      provider: GoogleProvider(clientId: googleClientID),
+                    ),
+                    listener: (oldState, newState, ctrl) {
+                      try{
+                        if (newState is SignedIn) {
+                          Navigator.pushReplacementNamed(context, '/');
+                        }
+                      } catch(e){
+                        print('Google OAuth Error: $e');
+                      }
+
+                      return null;
+                    },
+                  ),
+                ],
+              );
+            },
           );
         },
         '/verify-email': (context) {
