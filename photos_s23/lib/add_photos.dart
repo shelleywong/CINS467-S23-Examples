@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddPhotos extends StatefulWidget{
   const AddPhotos({super.key, required this.title});
@@ -25,6 +28,50 @@ class _MyAddPhotosState extends State<AddPhotos> {
     });
   }
 
+  Future<void> _upload() async {
+    if(_image != null){
+      // Generate a v4 (random) id (universally unique identifier)
+      const uuid = Uuid();
+      final String uid = uuid.v4();
+      // Upload image file to storage (using uid) and generate a downloadURL
+      final String downloadURL = await _uploadFile(uid);
+      // Add downloadURL (ref to the image) to the database
+      await _addItem(downloadURL, uid);
+      // Navigate back to the previous screen
+      if(mounted){
+        Navigator.pop(context);
+      }
+    }
+  }
+
+  Future<String> _uploadFile(String filename) async {
+    // Create a reference to file location in Google Cloud Storage object
+    Reference ref = FirebaseStorage.instance
+        .ref()
+        .child('$filename.jpg');
+    // Add metadata to the image file
+    final metadata = SettableMetadata(
+      contentType: 'image/jpeg',
+      contentLanguage: 'en',
+    );
+    // Upload the file to Storage
+    final UploadTask uploadTask = ref.putFile(_image!, metadata);
+    TaskSnapshot uploadResult = await uploadTask;
+    // After the upload task is complete, get a (String) download URL
+    final String downloadURL = await uploadResult.ref.getDownloadURL();
+    // Return the download URL (to be used in the database entry)
+    return downloadURL;
+  }
+
+  Future<void> _addItem(String downloadURL, String id) async {
+    await FirebaseFirestore.instance
+      .collection('photos')
+      .add(<String, dynamic> {
+        'downloadURL': downloadURL,
+        'title': id,
+      });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,7 +88,17 @@ class _MyAddPhotosState extends State<AddPhotos> {
             ElevatedButton(
               onPressed: _getImage,
               child: const Text(
-                'Take a photo',
+                'Take a Photo',
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _upload,
+              style: const ButtonStyle(
+                backgroundColor: MaterialStatePropertyAll<Color>(Colors.cyan),
+              ),
+              child: const Text(
+                'Upload Photo',
                 style: TextStyle(fontSize: 20),
               ),
             ),
