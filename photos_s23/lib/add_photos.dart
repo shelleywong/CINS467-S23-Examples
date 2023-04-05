@@ -4,8 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
 
-class AddPhotos extends StatefulWidget{
+class AddPhotos extends StatefulWidget {
   const AddPhotos({super.key, required this.title});
 
   final String title;
@@ -16,20 +17,63 @@ class AddPhotos extends StatefulWidget{
 
 class _MyAddPhotosState extends State<AddPhotos> {
   File? _image;
+  Position? _position;
+
+  /// Determine the current position of the device.
+  ///
+  /// When the location services are not enabled or permissions
+  /// are denied the `Future` will return an error.
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    return await Geolocator.getCurrentPosition();
+  }
 
   Future<void> _getImage() async {
     final ImagePicker picker = ImagePicker();
     // Capture photo
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
     setState(() {
-      if(photo != null){
+      if (photo != null) {
         _image = File(photo.path);
       }
     });
   }
 
   Future<void> _upload() async {
-    if(_image != null){
+    if (_image != null) {
+      _position = await _determinePosition();
       // Generate a v4 (random) id (universally unique identifier)
       const uuid = Uuid();
       final String uid = uuid.v4();
@@ -38,7 +82,7 @@ class _MyAddPhotosState extends State<AddPhotos> {
       // Add downloadURL (ref to the image) to the database
       await _addItem(downloadURL, uid);
       // Navigate back to the previous screen
-      if(mounted){
+      if (mounted) {
         Navigator.pop(context);
       }
     }
@@ -46,9 +90,7 @@ class _MyAddPhotosState extends State<AddPhotos> {
 
   Future<String> _uploadFile(String filename) async {
     // Create a reference to file location in Google Cloud Storage object
-    Reference ref = FirebaseStorage.instance
-        .ref()
-        .child('$filename.jpg');
+    Reference ref = FirebaseStorage.instance.ref().child('$filename.jpg');
     // Add metadata to the image file
     final metadata = SettableMetadata(
       contentType: 'image/jpeg',
@@ -64,12 +106,12 @@ class _MyAddPhotosState extends State<AddPhotos> {
   }
 
   Future<void> _addItem(String downloadURL, String id) async {
-    await FirebaseFirestore.instance
-      .collection('photos')
-      .add(<String, dynamic> {
-        'downloadURL': downloadURL,
-        'title': id,
-      });
+    await FirebaseFirestore.instance.collection('photos').add(<String, dynamic>{
+      'downloadURL': downloadURL,
+      'title': id,
+      'geopoint': GeoPoint(_position!.latitude, _position!.longitude),
+      'timestamp': DateTime.now(),
+    });
   }
 
   @override
@@ -83,8 +125,8 @@ class _MyAddPhotosState extends State<AddPhotos> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             _image == null
-              ? const Text('no image selected')
-              : Image.file(_image!, width: 300),
+                ? const Text('no image selected')
+                : Image.file(_image!, width: 300),
             ElevatedButton(
               onPressed: _getImage,
               child: const Text(
