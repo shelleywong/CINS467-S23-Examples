@@ -18,6 +18,7 @@ class AddPhotos extends StatefulWidget {
 class _MyAddPhotosState extends State<AddPhotos> {
   File? _image;
   Position? _position;
+  final TextEditingController _myController = TextEditingController();
 
   /// Determine the current position of the device.
   ///
@@ -108,10 +109,17 @@ class _MyAddPhotosState extends State<AddPhotos> {
   Future<void> _addItem(String downloadURL, String id) async {
     await FirebaseFirestore.instance.collection('photos').add(<String, dynamic>{
       'downloadURL': downloadURL,
-      'title': id,
+      'title': _myController.text,
       'geopoint': GeoPoint(_position!.latitude, _position!.longitude),
       'timestamp': DateTime.now(),
+      'id': id,
     });
+  }
+
+  @override
+  void dispose() {
+    _myController.dispose();
+    super.dispose();
   }
 
   @override
@@ -124,24 +132,48 @@ class _MyAddPhotosState extends State<AddPhotos> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            _image == null
-                ? const Text('no image selected')
-                : Image.file(_image!, width: 300),
-            ElevatedButton(
-              onPressed: _getImage,
-              child: const Text(
-                'Take a Photo',
-                style: TextStyle(fontSize: 20),
+            Expanded(
+              flex: 4,
+              child: _image == null
+                  ? const Text('no image selected')
+                  : Image.file(_image!, width: 300),
+            ),
+            Expanded(
+              flex: 1,
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: ElevatedButton(
+                  onPressed: _getImage,
+                  child: const Text(
+                    'Take a Photo',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
               ),
             ),
-            ElevatedButton(
-              onPressed: _upload,
-              style: const ButtonStyle(
-                backgroundColor: MaterialStatePropertyAll<Color>(Colors.cyan),
+            Expanded(
+              flex: 1,
+              child: TextField(
+                controller: _myController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Image Title',
+                ),
               ),
-              child: const Text(
-                'Upload Photo',
-                style: TextStyle(fontSize: 20),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: ElevatedButton(
+                  onPressed: _upload,
+                  style: const ButtonStyle(
+                    backgroundColor: MaterialStatePropertyAll<Color>(Colors.cyan),
+                  ),
+                  child: const Text(
+                    'Upload Photo',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
               ),
             ),
           ],
