@@ -56,7 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddPhotos(title: 'Add a photo'),
+              builder: (context) => const AddPhotos(title: 'Add a photo'),
             ),
           );
         },

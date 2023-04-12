@@ -85,7 +85,9 @@ class MyApp extends StatelessWidget {
                           Navigator.pushReplacementNamed(context, '/');
                         }
                       } catch(e){
-                        print('Google OAuth Error: $e');
+                        if (kDebugMode) {
+                          print('Google OAuth Error: $e');
+                        }
                       }
 
                       return null;

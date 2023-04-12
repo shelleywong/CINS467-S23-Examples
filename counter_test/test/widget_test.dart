@@ -8,14 +8,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:nav_stack/first.dart';
+import 'package:counter_test/main.dart';
+
 void main() {
+  testWidgets('check Counter decrement button', (WidgetTester tester) async {
+    await tester.pumpWidget(const MyApp());
+    expect(find.text('0'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pump();
+    expect(find.text('1'), findsOneWidget);
+    await(tester.tap(find.bySemanticsLabel('Decrement')));
+    await tester.pump();
+    expect(find.text('0'), findsOneWidget);
+  });
+
+  testWidgets('Confirm CINS467 Hello World text', (WidgetTester tester) async {
+    await tester.pumpWidget(const MyApp());
+    final title = find.text('CINS467 Hello World');
+    expect(title, findsAtLeastNWidgets(1));
+  });
+
+  testWidgets('Confirm CINS467', (WidgetTester tester) async {
+    await tester.pumpWidget(const MyApp());
+    final title = find.textContaining('CINS467');
+    expect(title, findsAtLeastNWidgets(1));
+  });
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MaterialApp(
-      title: 'Navigation Basics',
-      home: FirstRoute(),
-    ));
+    await tester.pumpWidget(const MyApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
