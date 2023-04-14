@@ -1,0 +1,16 @@
+default:
+  image: cirrusci/flutter:latest
+  before_script:
+    - cd counter_test
+    - flutter pub get
+
+stages:
+  - test
+  - lint
+  - build
+  - deploy
+
+flutter_test:
+  stage: test
+  script:
+    - flutter test
