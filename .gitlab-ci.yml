@@ -14,3 +14,17 @@ flutter_test:
   stage: test
   script:
     - flutter test
+
+flutter_lint:
+  stage: lint
+  script:
+    - flutter analyze
+
+flutter_build_web:
+  stage: build
+  script:
+    - flutter clean
+    - flutter build web
+  artifacts:
+    paths:
+      - counter_test/build/web/*
