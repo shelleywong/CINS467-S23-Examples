@@ -28,7 +28,7 @@ flutter_build_web:
   stage: build
   script:
     - flutter clean
-    - flutter build web
+    - flutter build web --base-href /CINS467-S23-Examples/
   artifacts:
     paths:
       - counter_test/build/web/*
@@ -39,7 +39,7 @@ pages:
   stage: deploy
   script:
     - flutter clean
-    - flutter build web
+    - flutter build web --base-href /CINS467-S23-Examples/
     - cp -r build/web ../public
   artifacts:
     paths:
