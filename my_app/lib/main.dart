@@ -1,291 +1,138 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
+import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 
-import 'package:my_app/storage.dart';
+import 'home.dart';
+import 'firebase_options.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  FirebaseUIAuth.configureProviders([
+    GoogleProvider(clientId: googleClientID),
+  ]);
+
+  if (kIsWeb) {
+    runApp(const MyApp(myAppTitle: 'Web CINS467'));
+  } else if (Platform.isAndroid) {
+    runApp(const MyApp(myAppTitle: 'Android CINS467'));
+  } else {
+    runApp(const MyApp(myAppTitle: 'CINS467'));
+  }
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.myAppTitle});
+
+  final String myAppTitle;
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    var providers = [EmailAuthProvider()];
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.deepPurple,
       ),
-      home: const MyHomePage(title: 'CINS 467 Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  final UserStorage _storage = UserStorage();
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  late Future<int> _counter;
-  late Future<String> _username;
-  late Future<bool> _metric;
-  late Future<int> _age;
-  //String _username = 'none';
-  //int _counter = 0;
-
-  Future<void> _incrementCounter() async {
-    final SharedPreferences prefs = await _prefs;
-    final int counter = (prefs.getInt('counter') ?? 0) + 1;
-    setState(() {
-      _counter = prefs.setInt('counter', counter).then((bool success) {
-        return counter;
-      });
-    });
-  }
-
-  Future<void> _decrementCounter() async {
-    final SharedPreferences prefs = await _prefs;
-    final int counter = (prefs.getInt('counter') ?? 0) - 1;
-    setState(() {
-      _counter = prefs.setInt('counter', counter).then((bool success) {
-        return counter;
-      });
-    });
-  }
-
-  Future<void> _setUsername() async {
-    _storage.readUsername().then((value) async {
-      final String username = (value == 'Shelley' ? 'swong' : 'Shelley');
-      _storage.readUserMetric().then((metric) async {
-        _storage.readUserAge().then((age) async {
-          await _storage.writeUserInfo(username, metric, age);
-          setState(() {
-            _username = _storage.readUsername();
-          });
-        });
-      });
-    });
-  }
-
-  Future<void> _setUserMetric() async {
-    _storage.readUserMetric().then((value) async {
-      final bool metric = (value ? false : true);
-      _storage.readUsername().then((name){
-        _storage.readUserAge().then((age){
-          _storage.writeUserInfo(name, metric, age);
-          setState(() {
-            _metric = _storage.readUserMetric();
-          });
-        });
-      });
-    });
-  }
-
-  Future<void> _setUserAge() async {
-    _storage.readUserAge().then((value) async {
-      final int age = (value == 42 ? 41 : 42);
-      _storage.readUsername().then((name){
-        _storage.readUserMetric().then((metric){
-          _storage.writeUserInfo(name, metric, age);
-          setState(() {
-            _age = _storage.readUserAge();
-          });
-        });
-      });
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _counter = _prefs.then((SharedPreferences prefs) {
-      return prefs.getInt('counter') ?? 0;
-    });
-    _username = _storage.readUsername();
-    _metric = _storage.readUserMetric();
-    _age = _storage.readUserAge();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            FutureBuilder(
-              future: _username,
-              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return const CircularProgressIndicator();
-                  default:
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      return Container(
-                        padding:
-                            const EdgeInsets.fromLTRB(12.0, 0.0, 12.0, 0.0),
-                        child: Text(
-                          'Hello ${snapshot.data}!',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                      );
-                    }
-                }
-              },
-            ),
-            FutureBuilder(
-              future: _metric,
-              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return const CircularProgressIndicator();
-                  default:
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      return Container(
-                        padding:
-                            const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Use metric? ${snapshot.data}!',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                      );
-                    }
-                }
-              },
-            ),
-            ElevatedButton(
-              onPressed: _setUserMetric, 
-              child: const Text('Metric/Imperial'),
-            ),
-            FutureBuilder(
-              future: _age,
-              builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return const CircularProgressIndicator();
-                  default:
-                    if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}');
-                    } else {
-                      return Container(
-                        padding:
-                            const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Age: ${snapshot.data}!',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                      );
-                    }
-                }
-              },
-            ),
-            ElevatedButton(
-              onPressed: _setUserAge, 
-              child: const Text('Toggle Age'),
-            ),
-            const Text(
-              'You have clicked the button this many times:',
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Tooltip(
-                    message: 'increments counter',
-                    child: ElevatedButton(
-                      onPressed: _incrementCounter,
-                      child: const Icon(Icons.thumb_up),
+      //home: MyHomePage(title: '$myAppTitle Home Page'),
+      initialRoute:
+          FirebaseAuth.instance.currentUser == null ? '/sign-in' : '/',
+      routes: {
+        '/': (context) => MyHomePage(title: '$myAppTitle Home Page'),
+        '/sign-in': (context) {
+          return SignInScreen(
+            providers: providers,
+            actions: [
+              AuthStateChangeAction<SignedIn>((context, state) {
+                // if (!state.user!.emailVerified) {
+                //   Navigator.pushNamed(context, '/verify-email');
+                // } else {
+                //   Navigator.pushReplacementNamed(context, '/');
+                // }
+                Navigator.pushReplacementNamed(context, '/');
+              }),
+            ],
+            headerBuilder: (context, constraints, shrinkOffset) {
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Image.asset('assets/dash1.png'),
+                ),
+              );
+            },
+            footerBuilder: (context, action) {
+              return Column(
+                children: [
+                  AuthStateListener<OAuthController>(
+                    child: OAuthProviderButton(
+                      provider: GoogleProvider(clientId: googleClientID),
                     ),
-                  ),
-                  FutureBuilder(
-                    future: _counter,
-                    builder:
-                        (BuildContext context, AsyncSnapshot<int> snapshot) {
-                      switch (snapshot.connectionState) {
-                        case ConnectionState.waiting:
-                          return const CircularProgressIndicator();
-                        default:
-                          if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          } else {
-                            return Container(
-                              padding: const EdgeInsets.fromLTRB(
-                                  12.0, 0.0, 12.0, 0.0),
-                              child: Text(
-                                'Counter: ${snapshot.data}',
-                                style:
-                                    Theme.of(context).textTheme.headlineMedium,
-                              ),
-                            );
-                          }
+                    listener: (oldState, newState, ctrl) {
+                      try{
+                        if (newState is SignedIn) {
+                          Navigator.pushReplacementNamed(context, '/');
+                        }
+                      } catch(e){
+                        if (kDebugMode) {
+                          print('Google OAuth Error: $e');
+                        }
                       }
+
+                      return null;
                     },
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.thumb_down),
-                    tooltip: 'decrements counter',
-                    color: Theme.of(context).primaryColor,
-                    onPressed: _decrementCounter,
-                  ),
                 ],
-              ),
+              );
+            },
+          );
+        },
+        '/verify-email': (context) {
+          return EmailVerificationScreen(
+            actions: [
+              EmailVerifiedAction(() {
+                Navigator.pushReplacementNamed(context, '/sign-in');
+              }),
+              AuthCancelledAction((context) {
+                FirebaseUIAuth.signOut(context: context);
+                Navigator.pushReplacementNamed(context, '/sign-in');
+              }),
+            ],
+          );
+        },
+        '/profile': (context) {
+          return ProfileScreen(
+            appBar: AppBar(
+              title: const Text('User Profile'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.home),
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/');
+                  },
+                )
+              ],
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _setUsername,
-        tooltip: 'Toggle user information',
-        child: const Icon(Icons.person),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+            providers: providers,
+            actions: [
+              SignedOutAction((context) {
+                Navigator.pushReplacementNamed(context, '/sign-in');
+              }),
+            ],
+          );
+        },
+      },
     );
   }
 }

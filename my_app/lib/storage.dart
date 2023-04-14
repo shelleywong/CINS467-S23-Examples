@@ -1,82 +1,68 @@
-import 'dart:io';
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
+
+//import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+//import 'firebase_options.dart';
 
 class UserStorage {
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
-  }
-
-  Future<File> get _localFile async {
-    final path = await _localPath;
-    return File('$path/userinfo.txt');
-  }
 
   Future<void> writeUserInfo(String name, bool metric, int age) async {
-    try{
-      final file = await _localFile;
-      // Write the file
-      var jsonString = json.encode({
-        'name': name,
-        'metric': metric,
-        'age': age,
-      });
-      file.writeAsString(jsonString);
-    } catch(e){
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    firestore.collection('users').doc('cins467').set({
+      'name': name,
+      'metric': metric,
+      'age': age,
+    }).then((value){
       if (kDebugMode) {
-        print('writeUserInfo error: $e');
+        print('user updated successfully');
       }
-    }
+    }).catchError((error){
+      if (kDebugMode) {
+        print('writeUserInfo error: $error');
+      }
+    });
   }
 
   Future<String> readUsername() async {
-    try {
-      final file = await _localFile;
-      // Read the file
-      final contents = await file.readAsString();
-      final userData = json.decode(contents);
-      return userData['name'];
-    } catch (e) {
-      // If encountering an error, return 0
-      if (kDebugMode) {
-        print('readUserInfo error: $e');
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentSnapshot ds = await firestore.collection('users')
+      .doc('cins467')
+      .get();
+    if(ds.data() != null){
+      Map<String, dynamic> data = (ds.data() as Map<String, dynamic>);
+      if(data.containsKey('name')){
+        return data['name'];
       }
-      return 'none';
     }
+    return 'none';
   }
 
   Future<bool> readUserMetric() async {
-    try {
-      final file = await _localFile;
-      // Read the file
-      final contents = await file.readAsString();
-      final userData = json.decode(contents);
-      return userData['metric'];
-    } catch (e) {
-      // If encountering an error, return 0
-      if (kDebugMode) {
-        print('readUserMetric error: $e');
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentSnapshot ds = await firestore.collection('users')
+      .doc('cins467')
+      .get();
+    if(ds.data() != null){
+      Map<String, dynamic> data = (ds.data() as Map<String, dynamic>);
+      if(data.containsKey('metric')){
+        return data['metric'];
       }
-      return false;
     }
+    return false;
   }
 
   Future<int> readUserAge() async {
-    try {
-      final file = await _localFile;
-      // Read the file
-      final contents = await file.readAsString();
-      final userData = json.decode(contents);
-      return userData['age'];
-    } catch (e) {
-      // If encountering an error, return 0
-      if (kDebugMode) {
-        print('readUserMetric error: $e');
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentSnapshot ds = await firestore.collection('users')
+      .doc('cins467')
+      .get();
+    if(ds.data() != null){
+      Map<String, dynamic> data = (ds.data() as Map<String, dynamic>);
+      if(data.containsKey('age')){
+        return data['age'];
       }
-      return -1;
     }
+    return -1;
   }
 }
