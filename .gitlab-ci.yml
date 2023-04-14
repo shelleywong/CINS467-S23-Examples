@@ -14,11 +14,15 @@ flutter_test:
   stage: test
   script:
     - flutter test
+  rules:
+    - if: $CI_COMMIT_BRANCH != "main"
 
 flutter_lint:
   stage: lint
   script:
     - flutter analyze
+  rules:
+    - if: $CI_COMMIT_BRANCH != "main"
 
 flutter_build_web:
   stage: build
@@ -28,3 +32,17 @@ flutter_build_web:
   artifacts:
     paths:
       - counter_test/build/web/*
+  rules:
+    - if: $CI_COMMIT_BRANCH != "main"
+
+pages:
+  stage: deploy
+  script:
+    - flutter clean
+    - flutter build web
+    - cp -r build/web ../public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
